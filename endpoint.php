@@ -77,7 +77,35 @@ function getUsuarioPorId($usuario_id)
 }
 
 /**
- * Edita o nome de um usuário.
+ * Cria um usuário.
+ *
+ * @param string $nome O novo nome para o usuário.
+ * @param string $email O novo email para o usuário.
+ * @param int $cor_id O novo id de cor para o usuário.
+ */
+function criarUsuario($nome, $email, $cor_id)
+{
+    global $conexao;
+
+    try {
+        $conexao->query("INSERT INTO users (name, email) VALUES ('$nome', '$email')");
+
+        $usuario = $conexao->query("SELECT * FROM users WHERE email = '$email' ORDER BY id DESC ");
+        $usuario = $usuario->fetch(PDO::FETCH_ASSOC);
+        $id = $usuario['id'];
+
+        $conexao->query("INSERT INTO user_colors (user_id, color_id) VALUES ('$id', '$cor_id')");
+
+        echo json_encode(['sucesso' => 'Usuário criado com sucesso']);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['erro' => 'Erro ao criado o usuário no banco de dados ' . $e]);
+        exit;
+    }
+}
+
+/**
+ * Edita um usuário.
  *
  * @param int $usuario_id O ID do usuário a ser editado.
  * @param string $nome O novo nome para o usuário.
@@ -149,6 +177,19 @@ switch ($_SERVER['REQUEST_METHOD']) {
         } else {
             http_response_code(400);
             echo json_encode(['erro' => 'Parâmetros inválidos']);
+        }
+        break;
+
+    case 'POST':
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+
+        if (isset($data['create_user'])) {
+            $nome = $data['nome'];
+            $email = $data['email'];
+            $cor_id = $data['cor_id'];
+
+            criarUsuario($nome, $email, $cor_id);
         }
         break;
 
