@@ -62,8 +62,13 @@ function getUsuarioPorId($usuario_id)
     global $conexao;
 
     try {
-        $usuario = $conexao->query('SELECT * FROM users WHERE id = ' . $usuario_id);
-        return $usuario->fetch();
+        $usuario = $conexao->query(
+            'SELECT *, u.id as user_id, u.name as user_name, c.name as color_name FROM users u
+            LEFT JOIN user_colors uc ON u.id = uc.user_id
+            LEFT JOIN colors c ON uc.color_id = c.id WHERE u.id = ' . $usuario_id
+        );
+
+        return $usuario->fetch(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
         http_response_code(500);
         echo json_encode(['erro' => 'Erro ao consultar o banco de dados ' . $e]);
@@ -75,14 +80,27 @@ function getUsuarioPorId($usuario_id)
  * Edita o nome de um usuário.
  *
  * @param int $usuario_id O ID do usuário a ser editado.
- * @param string $novo_nome O novo nome para o usuário.
+ * @param string $nome O novo nome para o usuário.
+ * @param string $email O novo email para o usuário.
+ * @param int $cor_id O novo id de cor para o usuário.
  */
-function editarUsuario($usuario_id, $novo_nome, $email)
+function editarUsuario($usuario_id, $nome, $email, $cor_id)
 {
     global $conexao;
 
     try {
-        $conexao->query("UPDATE users SET name = '$novo_nome', email = '$email' WHERE id = $usuario_id");
+        $conexao->query("UPDATE users SET name = '$nome', email = '$email' WHERE id = $usuario_id");
+
+        $corUsuario = $conexao->query(
+            'SELECT * FROM user_colors WHERE user_id = ' . $usuario_id
+        );
+
+        if ($corUsuario->fetch(PDO::FETCH_ASSOC)) {
+            $conexao->query("UPDATE user_colors SET color_id = '$cor_id' WHERE user_id = $usuario_id");
+        } else {
+            $conexao->query("INSERT INTO user_colors (user_id, color_id) VALUES ($usuario_id, $cor_id)");
+        }
+
         echo json_encode(['sucesso' => 'Usuário atualizado com sucesso']);
     } catch (Exception $e) {
         http_response_code(500);
@@ -142,7 +160,9 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $usuario_id = $data['id'];
             $nome = $data['nome'];
             $email = $data['email'];
-            editarUsuario($usuario_id, $nome, $email);
+            $cor_id = $data['cor_id'];
+
+            editarUsuario($usuario_id, $nome, $email, $cor_id);
         }
         break;
 
