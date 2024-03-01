@@ -148,6 +148,7 @@ function excluirUsuario($usuario_id)
 
     try {
         $conexao->query("DELETE FROM users WHERE id = $usuario_id");
+        $conexao->query("DELETE FROM user_colors WHERE user_id = $usuario_id");
         echo json_encode(['sucesso' => 'Usuário excluído com sucesso']);
     } catch (Exception $e) {
         http_response_code(500);
