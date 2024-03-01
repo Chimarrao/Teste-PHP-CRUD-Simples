@@ -119,7 +119,7 @@ function excluirUsuario($usuario_id)
     global $conexao;
 
     try {
-        $conexao->query("DELETE FROM usuarios WHERE id = $usuario_id");
+        $conexao->query("DELETE FROM users WHERE id = $usuario_id");
         echo json_encode(['sucesso' => 'Usuário excluído com sucesso']);
     } catch (Exception $e) {
         http_response_code(500);
@@ -167,9 +167,11 @@ switch ($_SERVER['REQUEST_METHOD']) {
         break;
 
     case 'DELETE':
-        parse_str(file_get_contents("php://input"), $_DELETE);
-        if (isset($_DELETE['delete_user'])) {
-            $usuario_id = $_DELETE['id'];
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+
+        if (isset($data['delete_user'])) {
+            $usuario_id = $data['id'];
             excluirUsuario($usuario_id);
         }
         break;

@@ -155,7 +155,7 @@ function confirmarExclusao(id) {
                 <div class="box">
                     <p>Você tem certeza que deseja excluir este usuário?</p>
                     <div class="buttons">
-                        <button class="button is-danger" onclick="excluirUsuario()">Sim</button>
+                        <button class="button is-danger" onclick="excluirUsuario('${id}')">Sim</button>
                         <button class="button" onclick="fecharModal('modal-exclusao')">Não</button>
                     </div>
                 </div>
@@ -163,6 +163,19 @@ function confirmarExclusao(id) {
             <button class="modal-close is-large" aria-label="close" onclick="fecharModal('modal-exclusao')"></button>
         </div>`
     );
+}
+
+function excluirUsuario(id) {
+    fetch(`endpoint.php`, {
+        method: 'DELETE',
+        body: JSON.stringify({ delete_user: true, id: id }),
+    })
+        .then(response => response.json())
+        .then(data => {
+            exibirUsuarios();
+            fecharModal('modal-exclusao')
+        })
+        .catch(error => console.error('Erro ao excluir o usuário:', error));
 }
 
 function fecharModal(id) {
